@@ -1,7 +1,7 @@
 import GameComponent from "../../GameComponent.js";
 import React from "react";
 import UserApi from "../../UserApi.js";
-
+import CharSelect from "./CharSelect.jsx";
 export default class Slayers extends GameComponent {
   constructor() {
     super();
@@ -30,6 +30,9 @@ export default class Slayers extends GameComponent {
     } else {
       host_greeting = "You are not the host";
     }
+    if (this.state.render === "characterSelect") {
+      return <CharSelect />;
+    }
     return (
       <div>
         {/* <p>{host_greeting}</p>
@@ -40,7 +43,13 @@ export default class Slayers extends GameComponent {
         <h1>Slayers</h1>
         <p>Player 1: {creator}</p>
         <p>Player 2: {users[1]}</p>
-        <button onClick={() => {}}>Start Game</button>
+        <button
+          onClick={() => {
+            this.setState({ render: "characterSelect" });
+          }}
+        >
+          Start Game
+        </button>
       </div>
     );
   }
