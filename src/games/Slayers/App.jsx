@@ -10,8 +10,9 @@ export default class Slayers extends GameComponent {
       render: null,
       playerOneHealth: null,
       playerTwoHealth: null,
-      dragonHealth: null,
-      activeTurn: null
+      playerOneAction: null,
+      playerTwoAction: null,
+      dragonHealth: null
     };
     this.attack = this.attack.bind(this);
     var myid = this.getMyUserId();
@@ -20,29 +21,61 @@ export default class Slayers extends GameComponent {
       this.getSessionDatabaseRef().set({
         playerOneHealth: 1000,
         playerTwoHealth: 1000,
-        dragonHealth: 4000,
-        activeTurn: "player1"
+        playerOneAction: null,
+        playerTwoAction: null,
+        dragonHealth: 2000
       });
-      // this.setState({
-      //   playerHealth: 1000
-      // })
     } else {
-      // host_greeting = "You are not the host";
     }
   }
 
   onSessionDataChanged(dataChanged) {
-    this.setState({
-      playerOneHealth: dataChanged.playerOneHealth,
-      playerTwoHealth: dataChanged.playerTwoHealth,
-      dragonHealth: dataChanged.dragonHealth,
-      activeTurn: dataChanged.activeTurn
-    });
+    var newState = {
+      ...this.state,
+      ...dataChanged
+    };
+    this.setState(newState);
+    var myid = this.getMyUserId();
+    var creator_id = this.getSessionCreatorUserId();
+    console.log(newState);
+    if (myid === creator_id) {
+      if (
+        newState.playerOneAction != null &&
+        newState.playerTwoAction != null
+      ) {
+        let playerOneDamage = 100;
+        let playerTwoDamage = 100;
+        let dragonDamage = 100;
+
+        this.getSessionDatabaseRef().update({
+          dragonHealth:
+            newState.dragonHealth - (playerOneDamage + playerTwoDamage),
+          playerOneHealth: newState.playerOneHealth - dragonDamage,
+          playerTwoHealth: newState.playerTwoHealth - dragonDamage,
+          playerOneAction: null,
+          playerTwoAction: null
+        });
+      }
+    }
   }
+  // onSessionMetadataChanged(player){
+  //   this.setState({
+
+  //   })
+  // }
   attack() {
-    this.getSessionDatabaseRef().set({
-      dragonHealth: this.state.dragonHealth - 100
-    });
+    var myid = this.getMyUserId();
+    var creator_id = this.getSessionCreatorUserId();
+
+    if (myid === creator_id) {
+      this.getSessionDatabaseRef().update({
+        playerOneAction: "attack"
+      });
+    } else {
+      this.getSessionDatabaseRef().update({
+        playerTwoAction: "attack"
+      });
+    }
   }
   render() {
     var id = this.getSessionId();
@@ -65,7 +98,6 @@ export default class Slayers extends GameComponent {
           playerOneHealth={this.state.playerOneHealth}
           playerTwoHealth={this.state.playerTwoHealth}
           dragonHealth={this.state.dragonHealth}
-          activeTurn={this.state.activeTurn}
           attack={this.attack}
         />
       );

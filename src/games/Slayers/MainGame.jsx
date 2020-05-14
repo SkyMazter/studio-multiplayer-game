@@ -9,7 +9,9 @@ export default class MainGame extends React.Component {
           onClick={() => {
             this.props.attack();
           }}
-        />
+        >
+          Attack
+        </button>
       </div>
     );
   }
