@@ -2,17 +2,18 @@ import GameComponent from "../../GameComponent.js";
 import React from "react";
 import UserApi from "../../UserApi.js";
 import MainGame from "./MainGame.jsx";
+import Victory from "./Victory.jsx";
 
 export default class Slayers extends GameComponent {
   constructor() {
     super();
     this.state = {
       render: null,
-      playerOneHealth: null,
-      playerTwoHealth: null,
+      playerOneHealth: 1000,
+      playerTwoHealth: 1000,
       playerOneAction: null,
       playerTwoAction: null,
-      dragonHealth: null
+      dragonHealth: 2000
     };
     this.attack = this.attack.bind(this);
     var myid = this.getMyUserId();
@@ -21,12 +22,20 @@ export default class Slayers extends GameComponent {
       this.getSessionDatabaseRef().set({
         playerOneHealth: 1000,
         playerTwoHealth: 1000,
-        playerOneAction: null,
-        playerTwoAction: null,
+        playerOneAction: "Undecided",
+        playerTwoAction: "Undecided",
         dragonHealth: 2000
       });
     } else {
     }
+  }
+  randomNum() {
+    console.log("in randomNum");
+    let number = Math.random() * 100;
+    number = number + 100;
+    number = Math.floor(number);
+    console.log(number);
+    return number;
   }
 
   onSessionDataChanged(dataChanged) {
@@ -38,22 +47,23 @@ export default class Slayers extends GameComponent {
     var myid = this.getMyUserId();
     var creator_id = this.getSessionCreatorUserId();
     console.log(newState);
+    console.log(this.randomNum());
     if (myid === creator_id) {
       if (
-        newState.playerOneAction != null &&
-        newState.playerTwoAction != null
+        newState.playerOneAction !== "Undecided" &&
+        newState.playerTwoAction !== "Undecided"
       ) {
-        let playerOneDamage = 100;
-        let playerTwoDamage = 100;
-        let dragonDamage = 100;
+        let playerOneDamage = this.randomNum();
+        let playerTwoDamage = this.randomNum();
+        let dragonDamage = this.randomNum();
 
         this.getSessionDatabaseRef().update({
           dragonHealth:
             newState.dragonHealth - (playerOneDamage + playerTwoDamage),
           playerOneHealth: newState.playerOneHealth - dragonDamage,
           playerTwoHealth: newState.playerTwoHealth - dragonDamage,
-          playerOneAction: null,
-          playerTwoAction: null
+          playerOneAction: "Undecided",
+          playerTwoAction: "Undecided"
         });
       }
     }
@@ -92,13 +102,16 @@ export default class Slayers extends GameComponent {
     var myid = this.getMyUserId();
     var host_greeting = null;
 
-    if (this.state.render === "characterSelect") {
+    if (this.state.dragonHealth === 0) {
+      return <Victory />;
+    } else if (this.state.render === "characterSelect") {
       return (
         <MainGame
           playerOneHealth={this.state.playerOneHealth}
           playerTwoHealth={this.state.playerTwoHealth}
           dragonHealth={this.state.dragonHealth}
           attack={this.attack}
+          p1action={this.state.playerOneAction}
         />
       );
     }
