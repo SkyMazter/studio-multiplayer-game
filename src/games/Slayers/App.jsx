@@ -16,6 +16,8 @@ export default class Slayers extends GameComponent {
       dragonHealth: 2000
     };
     this.attack = this.attack.bind(this);
+    this.updateRender = this.updateRender.bind(this);
+    this.heal = this.heal.bind(this);
     var myid = this.getMyUserId();
     var creator_id = this.getSessionCreatorUserId();
     if (creator_id === myid) {
@@ -50,18 +52,41 @@ export default class Slayers extends GameComponent {
     console.log(this.randomNum());
     if (myid === creator_id) {
       if (
-        newState.playerOneAction !== "Undecided" &&
-        newState.playerTwoAction !== "Undecided"
+        (newState.playerOneAction !== "Undecided" ||
+          newState.playerOneHealth <= 0) &&
+        (newState.playerTwoAction !== "Undecided" ||
+          newState.playerTwoHealth <= 0)
       ) {
-        let playerOneDamage = this.randomNum();
-        let playerTwoDamage = this.randomNum();
+        let playerOneDamage = 0;
+        let playerOneHealing = 0;
+        let playerTwoDamage = 0;
+        let playerTwoHealing = 0;
+
+        if (newState.playerOneAction === "attack") {
+          playerOneDamage = this.randomNum();
+          playerOneHealing = 0;
+        } else {
+          playerOneDamage = 0;
+          playerOneHealing = this.randomNum();
+        }
+
+        if (newState.playerTwoAction === "attack") {
+          playerTwoDamage = this.randomNum();
+          playerTwoHealing = 0;
+        } else {
+          playerTwoDamage = 0;
+          playerTwoHealing = this.randomNum();
+        }
+
         let dragonDamage = this.randomNum();
 
         this.getSessionDatabaseRef().update({
           dragonHealth:
             newState.dragonHealth - (playerOneDamage + playerTwoDamage),
-          playerOneHealth: newState.playerOneHealth - dragonDamage,
-          playerTwoHealth: newState.playerTwoHealth - dragonDamage,
+          playerOneHealth:
+            newState.playerOneHealth - dragonDamage + playerTwoHealing,
+          playerTwoHealth:
+            newState.playerTwoHealth - dragonDamage + playerOneHealing,
           playerOneAction: "Undecided",
           playerTwoAction: "Undecided"
         });
@@ -87,6 +112,30 @@ export default class Slayers extends GameComponent {
       });
     }
   }
+  heal() {
+    var myid = this.getMyUserId();
+    var creator_id = this.getSessionCreatorUserId();
+
+    if (myid === creator_id) {
+      this.getSessionDatabaseRef().update({
+        playerOneAction: "heal"
+      });
+    } else {
+      this.getSessionDatabaseRef().update({
+        playerTwoAction: "heal"
+      });
+    }
+  }
+  updateRender() {
+    this.getSessionDatabaseRef().update({
+      render: "menu",
+      playerOneHealth: 1000,
+      playerTwoHealth: 1000,
+      playerOneAction: null,
+      playerTwoAction: null,
+      dragonHealth: 2000
+    });
+  }
   render() {
     var id = this.getSessionId();
     var users = this.getSessionUserIds().map(user_id => (
@@ -102,8 +151,39 @@ export default class Slayers extends GameComponent {
     var myid = this.getMyUserId();
     var host_greeting = null;
 
-    if (this.state.dragonHealth === 0) {
-      return <Victory />;
+    if (this.state.dragonHealth <= 0) {
+      return <Victory renderState={this.updateRender} outcome={"Victory!!!"} />;
+    } else if (
+      this.state.playerOneHealth <= 0 &&
+      this.state.playerTwoHealth <= 0
+    ) {
+      return <Victory renderState={this.updateRender} outcome={"Defeat"} />;
+    } else if (this.state.playerOneHealth <= 0) {
+      return (
+        <MainGame
+          playerOneHealth={this.state.playerOneHealth}
+          playerTwoHealth={this.state.playerTwoHealth}
+          dragonHealth={this.state.dragonHealth}
+          attack={this.attack}
+          heal={this.heal}
+          p1action={"Knocked out"}
+          p2action={this.state.playerTwoAction}
+          alive={creator_id !== myid}
+        />
+      );
+    } else if (this.state.playerTwoHealth <= 0) {
+      return (
+        <MainGame
+          playerOneHealth={this.state.playerOneHealth}
+          playerTwoHealth={this.state.playerTwoHealth}
+          dragonHealth={this.state.dragonHealth}
+          attack={this.attack}
+          heal={this.heal}
+          p1action={this.state.playerOneAction}
+          p2action={"Knocked out"}
+          alive={creator_id === myid}
+        />
+      );
     } else if (this.state.render === "characterSelect") {
       return (
         <MainGame
@@ -111,7 +191,10 @@ export default class Slayers extends GameComponent {
           playerTwoHealth={this.state.playerTwoHealth}
           dragonHealth={this.state.dragonHealth}
           attack={this.attack}
+          heal={this.heal}
           p1action={this.state.playerOneAction}
+          p2action={this.state.playerTwoAction}
+          alive={true}
         />
       );
     }
