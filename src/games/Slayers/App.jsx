@@ -199,6 +199,9 @@ export default class Slayers extends GameComponent {
         />
       );
     }
+    if (this.state.render === "characterSelect") {
+      return <CharSelect />;
+    }
     return (
       <div>
         {/* <p>{host_greeting}</p>
