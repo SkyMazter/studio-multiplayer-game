@@ -3,6 +3,7 @@ import React from "react";
 import UserApi from "../../UserApi.js";
 import MainGame from "./MainGame.jsx";
 import Victory from "./Victory.jsx";
+import styles from "./style.css";
 
 export default class Slayers extends GameComponent {
   constructor() {
@@ -205,7 +206,7 @@ export default class Slayers extends GameComponent {
         <p>Session creator: {creator}</p>
         <p>Session users:</p>
         <ul>{users}</ul> */}
-        <h1>Slayers</h1>
+        <h1 style={{color: 'red'}}>Slayers</h1>
         <p>Player 1: {creator}</p>
         <p>Player 2: {users[1]}</p>
         <button
